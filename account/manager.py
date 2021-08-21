@@ -22,12 +22,18 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save()
 
-    def create_superuser(self, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
+    def create_superuser(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("User must have an email")
+        if not password:
+            raise ValueError("User must have a password")
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError(('super user must have is_staff True'))
+        user = self.model(
+            email=self.normalize_email(email)
+        )
 
-        return self.create_user(email, password, **extra_fields)
+        user.admin = True
+        user.staff = True
+        user.active = True
+        user.save(using=self._db)
+        return user
